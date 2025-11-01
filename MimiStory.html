@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>米米Story用複製工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+                        min-width: 320px;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+                @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .block {
+                padding: 15px;
+            }
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .block {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #fafafa;
+        }
+        
+        .block-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #555;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .default-text {
+            padding: 12px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+                
+        @media (max-width: 768px) {
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .full-width {
+                grid-column: 1;
+            }
+        }
+        
+        .input-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .input-field label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .input-field input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .input-field select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .input-field textarea {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .copy-button {
+            width: 100%;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 20px;
+        }
+
+        .success-message {
+            display: none;
+            color: #28a745;
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .bottom-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 480px) {
+            .bottom-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            
+            .char-counter {
+                text-align: center;
+            }
+        }
+        
+        .char-counter {
+            font-size: 16px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        .char-counter.warning {
+            color: #ffc107;
+        }
+        
+        .char-counter.error {
+            color: #dc3545;
+        }
+        
+        .char-counter.normal {
+            color: #28a745;
+        }
+        
+        .copy-button {
+            flex: 1;
+        }
+        
+        .copy-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>米米Story用複製工具</h1>
+        
+        <!-- 區塊一 -->
+        <div class="block">
+            <div class="block-title">主角範例參考</div>
+            <div class="default-text" id="defaultText">
+                澤魯．西恩茨：男性天族，心臟位於額間。棕短髮。嚮往真正自由的和平生活並作為其人生信念，不在乎他人的目光而是自在地過日子，在年幼時接觸青空艇後便愛上翱翔天空的感覺，想知曉天上的生活究竟呈現什麼面貌，因此十分憧憬回歸天上的那一日。多半情況下總是樂觀面對問題，將其作為挑戰。<br>
+                安婭．貝斯卡倫：女性瓦爾基里，心臟位於胸口。武器型態為雙手巨錘。金髮，喜好雙馬尾造型，相對其他人較為矮小，本人非常介意此事，提及會生氣。愛好甜食與流行時尚，夢想是在埃律開設最時尚的甜點店。有兩位姐姐，為家族中最小的女兒，倍受家人寵愛導致其外在個性橫蠻，以至於缺少真正可談心的社交對象。多年下來，這份外在性格成了她內心的自我保護，實際上她渴望能獲得相互信賴和被理解的平等關係，也容易在他人（家人以外）溫柔的關心之下被打動內心，產生動搖。對夢想的追求導致她在嚴酷戰鬥過後，會更加渴求甜食帶來的日常感彌補那些討厭的經歷。
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="useDefault">
+                <label for="useDefault">使用預設主角</label>
+            </div>
+        </div>
+        
+        <!-- 區塊二 -->
+        <div class="block" id="block2">
+            <div class="block-title">你所扮演的角色</div>
+            <div class="input-group">
+                <div class="input-field">
+                    <label>名字</label>
+                    <input type="text" id="b2_field1" placeholder="請輸入內容">
+                </div>
+                <div class="input-field">
+                    <label>你的性別</label>
+                    <select id="b2_field2">
+                        <option value="">請選擇</option>
+                        <option value="男性天族">男</option>
+                        <option value="女性天族">女</option>
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label>你的心臟位置</label>
+                    <select id="b2_field3">
+                        <option value="">請選擇</option>
+                        <option value="心臟位於額頭">額頭</option>
+                        <option value="心臟位於後頸">後頸</option>
+                        <option value="心臟位於胸口">胸口</option>
+                    </select>
+                </div>
+                <div class="input-field full-width">
+                    <label>外觀描述</label>
+                    <textarea id="b2_field4" placeholder="請輸入內容"></textarea>
+                </div>
+                <div class="input-field full-width">
+                    <label>性格描述</label>
+                    <textarea id="b2_field5" placeholder="請輸入內容"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 區塊三 -->
+        <div class="block" id="block3">
+            <div class="block-title">與你搭檔的瓦爾基里</div>
+            <div class="input-group">
+                <div class="input-field">
+                    <label>名字</label>
+                    <input type="text" id="b3_field1" placeholder="請輸入內容">
+                </div>
+                <div class="input-field">
+                    <label>瓦爾基里的性別</label>
+                    <select id="b3_field2">
+                        <option value="">請選擇</option>
+                        <option value="男性瓦爾基里">男</option>
+                        <option value="女性瓦爾基里">女</option>
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label>瓦爾基里的心臟位置</label>
+                    <select id="b3_field3">
+                        <option value="">請選擇</option>
+                        <option value="心臟位於額頭">額頭</option>
+                        <option value="心臟位於後頸">後頸</option>
+                        <option value="心臟位於胸口">胸口</option>
+                    </select>
+                </div>
+                <div class="input-field full-width">
+                    <label>外觀描述（請記得添加武器型態的描述）</label>
+                    <textarea id="b3_field4" placeholder="請輸入內容"></textarea>
+                </div>
+                <div class="input-field full-width">
+                    <label>性格描述</label>
+                    <textarea id="b3_field5" placeholder="請輸入內容"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-container">
+            <div class="char-counter">
+                字元數: <span id="charCount" class="normal">0</span> / 414
+            </div>
+            <button class="copy-button" id="copyBtn" onclick="copyContent()">複製內容</button>
+        </div>
+        <div class="success-message" id="successMsg">✓ 已複製到剪貼簿!</div>
+    </div>
+
+    <script>
+        // 後台預設內容(可以修改這裡)
+        const BACKEND_CONTENT = "{\"世界風格\":\"後啟示錄、奇幻\",\"核心守則\":[{\"主角間的情感交流\":\"聚焦主角們從陌生到相互理解，在冒險挑戰中成長，摸索世界真相與行動意義。\",\"契約的浪漫與重要\":\"與瓦爾基里的正式契約是靈魂認可，象徵至死不渝的搭檔關係，重靈性配合甚於理性適性，無法單純用理論說明。因此瓦爾基里會認真用「心靈世界」篩選契約者。\",\"陰影下的真實\":\"歷史是主觀的，各種族會掩蓋、扭曲不光彩的過往，故種族間思想差異極其合理。必要時，正確資訊應由米德加爾德的歷史廢墟或見證歷史的亞人揭露。\",\"天族的目標\":\"讓亞爾夫海姆重返天空是首要目標。天族高層深化蒼巡使的責任使命，並隱瞞天青石依賴「界變」產生。這份原罪是高層的秘密，也是推動戰爭的潛在動力。\"}],\"歷史摘要\":[\"遠古時世界僅人類，採集「天青石」，發覺其特殊性而研發，創造「原型天青爐」。\",\"「天族雛形」是人類結合天青石的活體實驗產物，素質不佳被流放，影響野外生物產生魔獸，魔獸與天族雛形誕下「亞人」。爾後人類實驗成功創造現代天族，並用亞人進行基因改造，創造「瓦爾基里」，其起源被天族高層列為機密。\",\"研究曝光，恐懼使人類聯合亞人引發1845年「原戰」，反遭天族魔法屠殺。人類死九成，科技倒退；亞人死五成，被趕入地底；天族造巨型天青爐帶走技術，將亞爾夫海姆升至雲上。\",\"世界迎數百年和平假象，直到2445年浮空大陸核心枯竭墜落，引發人類關注；同年，「亞人之王」統一亞人，侵略原生大陸，五年便攻下人類主要城鎮之一為據點。\",\"亞人軍攻勢嚴重，超出人類掌控，其領導者與天族協議合作各取所需，但也導致兩族嫌隙更大。\"],\"地理\":[{\"亞爾夫海姆（浮空大陸）\":\"墜落原生大陸東側，天族的生活土地，主城埃律（雅典風格）。因天上開採，自然天青石礦脈近乎枯竭，致核心衰竭墜落。\",\"米德加爾德（原生大陸）\":\"充斥歷史廢墟和人類城市，主城為東南方科利爾（18世紀倫敦）\",\"尼德威利爾（暗黑界）\":\"原生大陸西側有入口，廣闊複雜的地底世界，有大量古建築群（13世紀風格）\"}],\"種族\":[{\"天族\":[\"生理構造近乎人類，唯獨心臟天青石化並外露於隨機部位（如鑲嵌肌膚的寶石），此為致命弱點。蒼巡使任務中會戴護具保護，並在人類城市隱藏。血液帶大量魔力呈藍色，消耗過量魔力會引發貧血。\",\"同族相處和諧，嚮往回歸天上。普遍視人類、亞人為低等種族，態度憐憫，亦有部分因異族過激行為而仇恨。\",\"天族以天青石為能源，發展出現代乃至近未來科技。因魔法、瓦爾基里與和平，武器科技落後人類。\"]},{\"瓦爾基里\":[\"源自亞人的基因改造實驗體，經天青石技術重塑，外貌、特徵與天族高度相似，但力量本源不同。瓦爾基里不知此秘密。\",\"生活方式與社會地位表面上同天族，真實起源被高層視為機密。天族大眾認知中，瓦爾基里是稀有分支，除魔力性質，生理構造幾乎無異，無生殖隔離。佔天族人口兩成。\",\"僅契約者能喚醒瓦爾基里力量，正式契約則為直至一方死亡才解除，故除正式契約，另有僅發揮三成力量的臨時契約。再次正式契約者極少，多半有強烈精神創傷。\",\"共鳴為持續消耗魔力化身武器型態（需同意，可主動解除），此變形能力源自亞人血脈潛能量，與契約者同步感官共享思考。瓦爾基里能用魔法，但體內潛能量除武器化外無法像亞人主動運用。武器化下瓦爾基里失去肉體感覺，重創時仍承受精神衝擊，斷裂則強制解除共鳴，對心智有強烈負面影響。\",\"武器化瓦爾基里強度源自契約者的情感和信念，呼應潛能量唯心特性，保持正向強大精神是最佳提升手段。\"]},{\"人類\":[\"無法運用魔法和潛能量的普通人類。\",\"想法多元，分仇視異族的偏激派與追求自保的保守派。\",\"科技同18世紀工業革命中期，善用礦石發展蒸汽科技，創造有利對抗兩族的裝備。\"]},{\"亞人\":[\"擁魔獸血統的人型種族，個體性格差異大，壽命長短不一，體內蘊含大量潛能量。\",\"極度排外，同族亦常內鬥，共同夙願為回歸地表。\",\"無文字歷史，僅口傳且說法不一，少數長壽亞人親見歷史。\",\"科技水準停留13世紀，主要以天生體魄和運用潛能量為主。\"]},{\"魔獸\":[\"遍布各地，以魔力為食，受潛能量影響十分凶暴。\"]}],\"力量體系\":[{\"核心力量來源\":\"天族（魔法），人類（蒸汽科技），亞人（潛能量），瓦爾基里（武器化）\"},{\"種族重點戰力\":{\"蒼巡使\":\"天族主要戰力，與瓦爾基里搭檔。成蒼巡使是莫大榮耀，背負全族未來。透過遴選日測試選拔，配系統性訓練和分級任務培育。採集天青石、討伐魔獸、支援人類前線與探索暗黑界是主要工作。\",\"馭械者\":\"人類主要戰力。透過公會完整嚴苛的訓練和仲介，以四人團隊為主完成委託。\",\"亞戰士\":\"亞人中的強大存在，單人即可匹敵蒼巡使組合與馭械者團隊，憑藉血脈天賦與實戰磨礪力量，常成亞人軍指揮官和精銳戰力策畫進攻。\"}},{\"力量相剋\":\"潛能量使天族難以魔法對抗亞人；武器化瓦爾基里是天族對抗亞人的最有效手段，但不利用對抗厄里斯。魔法能有效對抗人類蒸汽科技。\"}],\"重點單詞\":[{\"天青石\":\"天族發展的重要資源，蘊含大量魔力但無法直接運用，易吸引魔獸，人類視為不祥之石。天族大眾認知其為自然礦物，認為討伐魔獸是為回收未消化礦石，不知『界變』才是主要來源。\",\"天青爐\":\"將天青石轉換為可用能量的技術，僅天族擁有。\",\"魔法\":\"將魔力集中至心臟釋放到環境構築現象，以地火水風四元素為根基遵循自然法則。建立在理解上使用，知識是提升關鍵，無法構築無法認知的現象。\",\"潛能量\":\"透過想像構成的唯心力量，能暫時扭曲自然法則，破壞魔法結構，但無法直接影響他人。強烈情緒是最佳燃料，恐懼會使其失控潰散。\",\"界變\":\"魔獸、亞人死後，無序潛能量爆發影響環境迅速變化，產生含天青石的多種礦物。強度由個體潛能量決定。此為天青石最大產出來源，真相被天族高層視為機密，天族大眾不知亞人死亡亦會引發。\",\"遴選日\":\"天族全族年度冬季祭典。強制召集20歲青年，透過測驗選定潛力者成蒼巡使，一生僅一次。瓦爾基里觀賞測驗，結束前選擇契約者。\",\"厄里斯\":\"馭械者主要武器，能靈活變換闊劍或槍械型態，以微型蒸汽機驅動增加速度力量，能創傷武器化瓦爾基里和短時干擾潛能量。\"}],";
+        
+        // 區塊一的預設字串
+        const DEFAULT_STRING = "\"主角\":{\"澤魯．西恩茨\":\"男性天族，心臟位於額間，棕短髮。嚮往真正自由的和平生活並作為其人生信念，不在乎他人的目光而是自在地過日子，在年幼時接觸青空艇後便愛上翱翔天空的感覺，想知曉天上的生活究竟呈現什麼面貌，因此十分憧憬回歸天上的那一日。多半情況下總是樂觀面對問題，將其作為挑戰。\",\"安婭．貝斯卡倫\":\"女性瓦爾基里，心臟位於胸口，武器型態為雙手巨錘。金髮，喜好雙馬尾造型，相對其他人較為矮小，本人非常介意此事，提及會生氣。愛好甜食與流行時尚，夢想是在埃律開設最時尚的甜點店。有兩位姐姐，為家族中最小的女兒，倍受家人寵愛導致其外在個性橫蠻，以至於缺少真正可談心的社交對象。多年下來，這份外在性格成了她內心的自我保護，實際上她渴望能獲得相互信賴和被理解的平等關係，也容易在他人（家人以外）溫柔的關心之下被打動內心，產生動搖。對夢想的追求導致她在嚴酷戰鬥過後，會更加渴求甜食帶來的日常感彌補那些討厭的經歷。\"}}";
+                
+        // 字元數上限
+        const CHAR_LIMIT = 414;
+        
+        // 更新字元數
+        function updateCharCount() {
+            // 只在未勾選預設內容時統計
+            if (!document.getElementById('useDefault').checked) {
+                const block2Content = getBlockContent('b2');
+                const block3Content = getBlockContent('b3');
+                const totalContent = block2Content + block3Content;
+                const charCount = totalContent.length;
+                
+                const charCountSpan = document.getElementById('charCount');
+                const copyBtn = document.getElementById('copyBtn');
+                
+                charCountSpan.textContent = charCount;
+                
+                // 根據字元數設定顏色和按鈕狀態
+                if (charCount > CHAR_LIMIT) {
+                    charCountSpan.className = 'error';
+                    copyBtn.disabled = true;
+                } else if (charCount > CHAR_LIMIT * 0.9) {
+                    charCountSpan.className = 'warning';
+                    copyBtn.disabled = false;
+                } else {
+                    charCountSpan.className = 'normal';
+                    copyBtn.disabled = false;
+                }
+            } else {
+                // 使用預設內容時,顯示為0並啟用按鈕
+                document.getElementById('charCount').textContent = '0';
+                document.getElementById('charCount').className = 'normal';
+                document.getElementById('copyBtn').disabled = false;
+            }
+        }
+        
+        // 為所有輸入欄位添加事件監聽
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('#block2 input, #block2 select, #block2 textarea, #block3 input, #block3 select, #block3 textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', updateCharCount);
+                input.addEventListener('change', updateCharCount);
+            });
+            
+            // 初始化字元數
+            updateCharCount();
+        });
+        
+        // 更新區塊二和三的顯示狀態
+        document.getElementById('useDefault').addEventListener('change', function() {
+            const isChecked = this.checked;
+            document.getElementById('block2').style.opacity = isChecked ? '0.5' : '1';
+            document.getElementById('block3').style.opacity = isChecked ? '0.5' : '1';
+            
+            // 禁用或啟用輸入欄位
+            const inputs = document.querySelectorAll('#block2 input, #block2 select, #block2 textarea, #block3 input, #block3 select, #block3 textarea');
+            inputs.forEach(input => {
+                input.disabled = isChecked;
+            });
+            
+            // 更新字元數
+            updateCharCount();
+        });
+        
+        function copyContent() {
+            let finalContent = BACKEND_CONTENT;
+            
+            if (document.getElementById('useDefault').checked) {
+                // 使用預設內容
+                finalContent += DEFAULT_STRING;
+            } else {
+                // 使用使用者填入的內容
+                const block2Content = getBlockContent('b2');
+                const block3Content = getBlockContent('b3');
+                finalContent += "\"主角\":{" + block2Content + "," + block3Content + "}}";
+            }
+            
+            // 複製到剪貼簿 - 支援多種方法
+            const copyToClipboard = (text) => {
+                // 方法 1: 現代瀏覽器的 Clipboard API
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text)
+                        .then(() => true)
+                        .catch(() => false);
+                }
+                
+                // 方法 2: 使用 textarea 的傳統方法 (支援舊版行動裝置)
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.top = '0';
+                textarea.style.left = '0';
+                textarea.style.width = '2em';
+                textarea.style.height = '2em';
+                textarea.style.padding = '0';
+                textarea.style.border = 'none';
+                textarea.style.outline = 'none';
+                textarea.style.boxShadow = 'none';
+                textarea.style.background = 'transparent';
+                textarea.setAttribute('readonly', '');
+                
+                document.body.appendChild(textarea);
+                
+                // iOS 特殊處理
+                if (navigator.userAgent.match(/ipad|iphone/i)) {
+                    const range = document.createRange();
+                    range.selectNodeContents(textarea);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    textarea.setSelectionRange(0, 999999);
+                } else {
+                    textarea.select();
+                }
+                
+                let success = false;
+                try {
+                    success = document.execCommand('copy');
+                } catch (err) {
+                    success = false;
+                }
+                
+                document.body.removeChild(textarea);
+                return Promise.resolve(success);
+            };
+            
+            // 執行複製
+            copyToClipboard(finalContent).then(success => {
+                if (success) {
+                    // 顯示成功訊息
+                    const successMsg = document.getElementById('successMsg');
+                    successMsg.style.display = 'block';
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 2000);
+                } else {
+                    alert('複製失敗，請手動複製內容');
+                }
+            });
+        }
+        
+        function getBlockContent(blockPrefix) {
+            const field1 = document.getElementById(blockPrefix + '_field1').value;
+            const field2 = document.getElementById(blockPrefix + '_field2').value;
+            const field3 = document.getElementById(blockPrefix + '_field3').value;
+            const field4 = document.getElementById(blockPrefix + '_field4').value;
+            const field5 = document.getElementById(blockPrefix + '_field5').value;
+            
+            // 組合內容(可以根據需求調整格式)
+            let content = '';
+            if (field1) content += "\"" + field1 + "\":";
+            if (field2) content += "\"" + field2 + "，";
+            if (field3) content += field3 + "。";
+            if (field4) content += field4;
+            if (field5) content += field5 + "\"";
+            
+            return content;
+        }
+    </script>
+</body>
+</html>
