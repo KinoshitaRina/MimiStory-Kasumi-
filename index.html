@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>正規聯盟但是Story</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         body {
@@ -137,9 +136,9 @@
 
     <script>
         // --- 設定區 ---
-        // 請將您的 Google Sheet 發佈到網路，並在此替換為 CSV 連結
-        // 格式範例: https://docs.google.com/spreadsheets/d/ID/pub?output=csv
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS4VRBM8pzggrrDvgaz05ld1K1mlWkLTLaI2fzSFsM6_yeBfupledjUjxVH9XQR0yG7w7UuB8tRP_u7/pub?output=csv'; 
+        // 請將您的 Google Sheet 發佈到網路，並在此替換為 TSV 連結
+        // 格式範例: https://docs.google.com/spreadsheets/d/ID/pub?output=tsv
+        const SHEET_TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS4VRBM8pzggrrDvgaz05ld1K1mlWkLTLaI2fzSFsM6_yeBfupledjUjxVH9XQR0yG7w7UuB8tRP_u7/pub?output=tsv'; 
         // 註：上面是一個示範用佔位連結。若無連結，程式將使用模擬數據。
         
         let database = [];
@@ -203,66 +202,42 @@
         }
 
         // --- 資料庫功能 ---
-        function fetchDatabase() {
-            // 修正：使用 Papa Parse 內建的 download 功能，比手動 fetch 更穩定且能處理編碼
-            Papa.parse(SHEET_CSV_URL, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    // 解析完成，檢查數據是否有效
-                    if (results.data && results.data.length > 0) {
-                        processData(results.data);
-                    } else {
-                        console.warn("載入的 CSV 為空或格式錯誤，切換至模擬數據");
-                        loadMockData();
-                    }
-                },
-                error: function(err) {
-                    console.warn("網路下載失敗，切換至模擬數據:", err);
-                    loadMockData();
-                }
-            });
-        }
-
-        function loadMockData() {
-            // 模擬數據定義
-            const mockCSV = `ID,名稱,特性
- 0001,劉眾赫,"他最大的特色在於「無限迴歸者」的身份。為了守護世界與所愛之人，他經歷了無數次輪迴...
- 包含換行、逗號，都能正確處理。"
- 0002,金獨子,《在滅亡的世界中生存的三種方法》唯一完讀者。
- 0003,韓秀英,"第一黑化作者，擁有分身能力與強大的判斷力。"`;
-            
-            // 解析模擬數據字串
-            Papa.parse(mockCSV, {
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    processData(results.data);
-                }
-             });
-
-        }
-
-        function processData(data) {
-             // 轉換為我們需要的格式
-            const result = data.map(row => ({
-                 id: (row.ID || row.id || '').trim(),
-                 name: (row['名稱'] || row.name || '').trim(),
-                 trait: (row['特性'] || row.trait || '').trim()
-             })).filter(char => char.id && char.name); // 過濾掉無效資料
-
-            // 二次檢查：如果轉換後沒有有效角色，視為失敗
-            if (result.length === 0) {
-                console.warn("數據格式不符，無有效角色資料");
-                if (database.length === 0) loadMockData(); // 避免無限遞迴
-                return;
+        async function fetchDatabase() {
+            try {
+                // 為了展示方便，如果抓不到會使用模擬數據
+                const response = await fetch(SHEET_TSV_URL);
+                const tsvData = await response.text();
+                parseTSV(tsvData);
+            } catch (error) {
+                console.log("使用模擬數據庫...");
+                // 模擬數據 (使用 Tab 分隔)
+                const mockTSV = `ID\t名稱\t特性
+0001\t劉眾赫\t他最大的特色在於「無限迴歸者」的身份。為了守護世界與所愛之人，他經歷了無數次輪迴...
+0002\t金獨子\t《在滅亡的世界中生存的三種方法》唯一完讀者。
+0003\t韓秀英\t第一黑化作者，擁有分身能力與強大的判斷力。`;
+                parseTSV(mockTSV);
             }
+        }
 
+        function parseTSV(tsvText) {
+            const lines = tsvText.split('\n');
+            const result = [];
+            // 跳過標題列
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                // TSV 處理：使用 Tab 字符分隔
+                const parts = lines[i].split('\t');
+                if (parts.length >= 3) {
+                    result.push({
+                        id: parts[0].trim(),
+                        name: parts[1].trim(),
+                        trait: parts[2].trim()
+                    });
+                }
+            }
             database = result;
             renderSelect(database);
-            
-            console.log(`成功載入 ${database.length} 個角色`);
         }
 
         function renderSelect(data) {
