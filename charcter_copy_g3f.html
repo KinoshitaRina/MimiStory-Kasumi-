@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色資料轉換器</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto+Sans+TC', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .tab-active {
+            border-bottom: 3px solid #3b82f6;
+            color: #3b82f6;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div class="max-w-md mx-auto md:max-w-2xl lg:max-w-4xl px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">角色資料管理工具</h1>
+            <p class="text-gray-500 text-sm mt-2">快速轉換與搜尋角色設定格式</p>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <nav class="flex bg-white rounded-t-xl shadow-sm overflow-hidden">
+            <button onclick="switchTab('custom')" id="tab-custom" class="flex-1 py-4 text-center font-medium transition-colors tab-active">
+                自訂輸入角色
+            </button>
+            <button onclick="switchTab('database')" id="tab-database" class="flex-1 py-4 text-center font-medium transition-colors text-gray-500 hover:bg-gray-50">
+                挑選資料庫角色
+            </button>
+        </nav>
+
+        <!-- Main Content Container -->
+        <main class="bg-white rounded-b-xl shadow-lg p-6 mb-8">
+            
+            <!-- Page 1: Custom Input -->
+            <section id="page-custom" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">角色名稱</label>
+                    <input type="text" id="custom-name" placeholder="例如：桐谷和人" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">角色特性 (建議約400字)</label>
+                    <textarea id="custom-trait" rows="8" placeholder="請輸入詳細的角色描述、性格、背景故事..." 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"></textarea>
+                </div>
+                
+                <div class="pt-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">轉換結果</label>
+                    <div id="custom-output" class="bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-sm min-h-[150px] overflow-auto select-all">
+                        <!-- Result will appear here -->
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="copyContent('custom-output')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                        複製內容
+                    </button>
+                    <button onclick="clearCustom()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-colors">
+                        完全清空
+                    </button>
+                </div>
+            </section>
+
+            <!-- Page 2: Database Select -->
+            <section id="page-database" class="hidden space-y-6">
+                <div class="flex flex-col gap-4">
+                    <div class="relative">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">搜尋角色</label>
+                        <div class="flex gap-2">
+                            <div class="relative flex-1">
+                                <input type="text" id="db-search" placeholder="輸入名稱關鍵字..." 
+                                    class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
+                                <div class="absolute left-3 top-2.5 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <button onclick="handleSearch()" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors px-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">選擇角色</label>
+                        <select id="db-select" onchange="handleSelectRole()"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all bg-white">
+                            <option value="">載入中...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">提取結果</label>
+                    <div id="db-output" class="bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-sm min-h-[150px] overflow-auto select-all">
+                        <!-- Selected character will appear here -->
+                    </div>
+                </div>
+
+                <button onclick="copyContent('db-output')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    複製內容
+                </button>
+            </section>
+        </main>
+        
+        <footer class="text-center text-gray-400 text-xs">
+            系統支援：iOS, Android, Desktop Web
+        </footer>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-2 rounded-full opacity-0 transition-opacity duration-300 pointer-events-none shadow-lg">
+        已複製到剪貼簿
+    </div>
+
+    <script>
+        // --- 設定區 ---
+        // 請將您的 Google Sheet 發佈到網路，並在此替換為 CSV 連結
+        // 格式範例: https://docs.google.com/spreadsheets/d/ID/pub?output=csv
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS4VRBM8pzggrrDvgaz05ld1K1mlWkLTLaI2fzSFsM6_yeBfupledjUjxVH9XQR0yG7w7UuB8tRP_u7/pub?output=csv'; 
+        // 註：上面是一個示範用佔位連結。若無連結，程式將使用模擬數據。
+        
+        let database = [];
+
+        // --- 初始化 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initInputs();
+            fetchDatabase();
+        });
+
+        function initInputs() {
+            const nameInput = document.getElementById('custom-name');
+            const traitInput = document.getElementById('custom-trait');
+            
+            [nameInput, traitInput].forEach(el => {
+                el.addEventListener('input', updateCustomOutput);
+            });
+        }
+
+        // --- 分頁功能 ---
+        function switchTab(tab) {
+            const pageCustom = document.getElementById('page-custom');
+            const pageDatabase = document.getElementById('page-database');
+            const btnCustom = document.getElementById('tab-custom');
+            const btnDatabase = document.getElementById('tab-database');
+
+            if (tab === 'custom') {
+                pageCustom.classList.remove('hidden');
+                pageDatabase.classList.add('hidden');
+                btnCustom.classList.add('tab-active');
+                btnCustom.classList.remove('text-gray-500');
+                btnDatabase.classList.remove('tab-active');
+                btnDatabase.classList.add('text-gray-500');
+            } else {
+                pageCustom.classList.add('hidden');
+                pageDatabase.classList.remove('hidden');
+                btnDatabase.classList.add('tab-active');
+                btnDatabase.classList.remove('text-gray-500');
+                btnCustom.classList.remove('tab-active');
+                btnCustom.classList.add('text-gray-500');
+            }
+        }
+
+        // --- 核心轉換邏輯 ---
+        function formatOutput(name, trait) {
+            if (!name && !trait) return "";
+            return `<${name}>\n角色名稱: "${name}"\n角色特性: "\n${trait}"\n</${name}>`;
+        }
+
+        // --- 自訂輸入功能 ---
+        function updateCustomOutput() {
+            const name = document.getElementById('custom-name').value;
+            const trait = document.getElementById('custom-trait').value;
+            document.getElementById('custom-output').innerText = formatOutput(name, trait);
+        }
+
+        function clearCustom() {
+            document.getElementById('custom-name').value = '';
+            document.getElementById('custom-trait').value = '';
+            document.getElementById('custom-output').innerText = '';
+        }
+
+        // --- 資料庫功能 ---
+        async function fetchDatabase() {
+            try {
+                // 為了展示方便，如果抓不到會使用模擬數據
+                const response = await fetch(SHEET_CSV_URL);
+                const csvData = await response.text();
+                parseCSV(csvData);
+            } catch (error) {
+                console.log("使用模擬數據庫...");
+                // 模擬數據
+                const mockCSV = `ID,名稱,特性
+0001,劉眾赫,他最大的特色在於「無限迴歸者」的身份。為了守護世界與所愛之人，他經歷了無數次輪迴...
+0002,金獨子,《在滅亡的世界中生存的三種方法》唯一完讀者。
+0003,韓秀英,第一黑化作者，擁有分身能力與強大的判斷力。`;
+                parseCSV(mockCSV);
+            }
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const result = [];
+            // 跳過標題列
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                // 簡易 CSV 處理 (處理逗號與引號)
+                const parts = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                if (parts.length >= 3) {
+                    result.push({
+                        id: parts[0].trim().replace(/^"|"$/g, ''),
+                        name: parts[1].trim().replace(/^"|"$/g, ''),
+                        trait: parts[2].trim().replace(/^"|"$/g, '').replace(/""/g, '"')
+                    });
+                }
+            }
+            database = result;
+            renderSelect(database);
+        }
+
+        function renderSelect(data) {
+            const select = document.getElementById('db-select');
+            select.innerHTML = '<option value="">-- 請選擇角色 --</option>';
+            data.forEach(char => {
+                const option = document.createElement('option');
+                option.value = char.id;
+                option.textContent = `[${char.id}] ${char.name}`;
+                select.appendChild(option);
+            });
+        }
+
+        function handleSearch() {
+            const keyword = document.getElementById('db-search').value.toLowerCase().trim();
+            if (!keyword) {
+                renderSelect(database);
+                return;
+            }
+            const filtered = database.filter(char => 
+                char.name.toLowerCase().includes(keyword) || 
+                char.id.includes(keyword)
+            );
+            renderSelect(filtered);
+        }
+
+        function handleSelectRole() {
+            const id = document.getElementById('db-select').value;
+            const char = database.find(c => c.id === id);
+            const output = document.getElementById('db-output');
+            
+            if (char) {
+                output.innerText = formatOutput(char.name, char.trait);
+            } else {
+                output.innerText = "";
+            }
+        }
+
+        // --- 通用功能 ---
+        function copyContent(elementId) {
+            const content = document.getElementById(elementId).innerText;
+            if (!content) return;
+
+            navigator.clipboard.writeText(content).then(() => {
+                showToast();
+            }).catch(err => {
+                // Fallback for older browsers
+                const textArea = document.createElement("textarea");
+                textArea.value = content;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast();
+            });
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
