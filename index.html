@@ -203,43 +203,61 @@
         }
 
         // --- 資料庫功能 ---
-        async function fetchDatabase() {
-            try {
-                // 使用 Papa Parse 解析 CSV
-                const response = await fetch(SHEET_CSV_URL);
-                const csvData = await response.text();
-                parseCSV(csvData);
-            } catch (error) {
-                console.log("無法載入資料，使用模擬數據庫...", error);
-                // 模擬數據
-                const mockCSV = `ID,名稱,特性
-0001,劉眾赫,"他最大的特色在於「無限迴歸者」的身份。為了守護世界與所愛之人，他經歷了無數次輪迴...
-包含換行、逗號，都能正確處理。"
-0002,金獨子,《在滅亡的世界中生存的三種方法》唯一完讀者。
-0003,韓秀英,"第一黑化作者，擁有分身能力與強大的判斷力。"`;
-                parseCSV(mockCSV);
-            }
+        function fetchDatabase() {
+            // 修正：使用 Papa Parse 內建的 download 功能，比手動 fetch 更穩定且能處理編碼
+            Papa.parse(SHEET_CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    // 解析完成，檢查數據是否有效
+                    if (results.data && results.data.length > 0) {
+                        processData(results.data);
+                    } else {
+                        console.warn("載入的 CSV 為空或格式錯誤，切換至模擬數據");
+                        loadMockData();
+                    }
+                },
+                error: function(err) {
+                    console.warn("網路下載失敗，切換至模擬數據:", err);
+                    loadMockData();
+                }
+            });
         }
 
-        function parseCSV(csvText) {
-            // 使用 Papa Parse 進行專業的 CSV 解析
-            const parsed = Papa.parse(csvText, {
-                header: true,           // 第一行作為標題
-                skipEmptyLines: true,   // 跳過空行
-                trimHeaders: true,      // 去除標題空格
-                dynamicTyping: false    // 保持所有內容為字串
-            });
+        function loadMockData() {
+            // 模擬數據定義
+            const mockCSV = `ID,名稱,特性
+ 0001,劉眾赫,"他最大的特色在於「無限迴歸者」的身份。為了守護世界與所愛之人，他經歷了無數次輪迴...
+ 包含換行、逗號，都能正確處理。"
+ 0002,金獨子,《在滅亡的世界中生存的三種方法》唯一完讀者。
+ 0003,韓秀英,"第一黑化作者，擁有分身能力與強大的判斷力。"`;
+            
+            // 解析模擬數據字串
+            Papa.parse(mockCSV, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processData(results.data);
+                }
+             });
 
-            if (parsed.errors.length > 0) {
-                console.warn("CSV 解析警告:", parsed.errors);
+        }
+
+        function processData(data) {
+             // 轉換為我們需要的格式
+            const result = data.map(row => ({
+                 id: (row.ID || row.id || '').trim(),
+                 name: (row['名稱'] || row.name || '').trim(),
+                 trait: (row['特性'] || row.trait || '').trim()
+             })).filter(char => char.id && char.name); // 過濾掉無效資料
+
+            // 二次檢查：如果轉換後沒有有效角色，視為失敗
+            if (result.length === 0) {
+                console.warn("數據格式不符，無有效角色資料");
+                if (database.length === 0) loadMockData(); // 避免無限遞迴
+                return;
             }
-
-            // 轉換為我們需要的格式
-            const result = parsed.data.map(row => ({
-                id: (row.ID || row.id || '').trim(),
-                name: (row['名稱'] || row.name || '').trim(),
-                trait: (row['特性'] || row.trait || '').trim()
-            })).filter(char => char.id && char.name); // 過濾掉無效資料
 
             database = result;
             renderSelect(database);
